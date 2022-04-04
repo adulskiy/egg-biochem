@@ -1,0 +1,365 @@
+---
+title: "Egg Analysis"
+author: "Ana Dulskiy"
+date: "4/1/2022"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load libraries:
+
+```{r}
+library(tidyverse)
+library(patchwork)
+```
+
+Load data:
+
+getwd()
+setwd("~/egg-biochem")
+
+```{r}
+egg <- read.csv("eggdata_clean.csv")
+```
+
+## Plots!
+
+### Egg Diameter
+```{r}
+diameter <- ggplot(egg, aes(x = species, y = diameter, color = population)) +
+  geom_boxplot()
+
+```
+
+
+
+### Egg volume
+
+```{r}
+volume <- ggplot(egg, aes(x = species, y = volume, color = population)) +
+  geom_boxplot()
+```
+
+
+### Total Protein
+
+```{r}
+total.protein <- ggplot(egg, aes(x = species, y = total.protein, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+### Protein Density
+
+```{r}
+protein.density <- ggplot(egg, aes(x = species, y = protein.density, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+
+```
+
+
+### Total Lipid
+
+```{r}
+total.lipid <- ggplot(egg, aes(x = species, y = total.lipid, color = population)) +
+  geom_boxplot()  +
+  theme(legend.position = "none")
+```
+
+### Lipid Density
+
+```{r}
+lipid.density <- ggplot(egg, aes(x = species, y = lipid.density, color = population)) +
+  geom_boxplot()  +
+  theme(legend.position = "none")
+```
+
+### Total Carb
+
+```{r}
+total.carb <- ggplot(egg, aes(x = species, y = total.carb, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+
+### Carb Density
+```{r}
+carb.density <- ggplot(egg, aes(x = species, y = carb.density, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+
+### Protein Energy
+```{r}
+protein.energy <- ggplot(egg, aes(x = species, y = protein.energy, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+
+### Lipid Energy
+```{r}
+lipid.energy <- ggplot(egg, aes(x = species, y = lipid.energy, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+
+### Carb Energy
+```{r}
+carb.energy <- ggplot(egg, aes(x = species, y = carb.energy, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+
+### Total Energy
+```{r}
+total.energy <- ggplot(egg, aes(x = species, y = total.energy, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+
+### Energy Density
+```{r}
+energy.density <- ggplot(egg, aes(x = species, y = energy.density, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+
+### Lipid:Protein
+```{r}
+lipid.protein <- ggplot(egg, aes(x = species, y = lipid.protein, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+### % Energy from Lipid
+```{r}
+perc.energy.lipid <- ggplot(egg, aes(x = species, y = perc.energy.lipid, color = population)) +
+  geom_boxplot()  +
+  theme(legend.position = "none")
+```
+### % Protein
+```{r}
+perc.protein <- ggplot(egg, aes(x = species, y = perc.protein, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+### % Lipid
+```{r}
+perc.lipid <- ggplot(egg, aes(x = species, y = perc.lipid, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+### % Carb
+```{r}
+perc.carb <- ggplot(egg, aes(x = species, y = perc.carb, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+### Summed Constituents
+
+```{r}
+summed.constituents <- ggplot(egg, aes(x = species, y = summed.constituents, color = population)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+Compiled plots:
+```{r}
+diameter + volume
+```
+```{r}
+total.protein + total.lipid + total.carb
+```
+```{r}
+protein.density + lipid.density + carb.density
+```
+```{r}
+protein.energy + lipid.energy + carb.energy
+```
+
+```{r}
+perc.protein + perc.lipid + perc.carb
+```
+```{r}
+perc.energy.lipid + lipid.protein
+```
+```{r}
+total.energy + summed.constituents
+```
+
+
+# Statistics
+
+### Summary:
+```{r}
+summary(egg)
+```
+
+### 2-way ANOVA unbalanced
+```{r}
+install.packages("car")
+library(car)
+install.packages("fitdistrplus")
+library(fitdistrplus)
+```
+Check if data normal (p-value >0.05 for shapiro test = normal):
+```{r}
+lshap <- lapply(egg[5:23], shapiro.test)
+lres <- sapply(lshap, `[`, c("statistic","p.value"))
+t(lres)
+
+```
+
+The following variables are not normally distributed according to the shapiro test and have to be treated accordingly:
+- Diameter
+- Volume
+- Total Carb
+- Carb Energy
+
+
+Figure out what distributions we're dealing with for non-normal data:
+```{r}
+library(fitdistrplus)
+descdist(egg$diameter, discrete = FALSE)
+
+```
+Diameter = beta distribution
+
+```{r}
+descdist(egg$volume, discrete = FALSE)
+
+```
+
+Volume = beta distribution
+
+```{r}
+#total.carb has one NA value, so we need to remove that to do the descdist plot
+total.carb.nn <- c(na.exclude(egg$total.carb))
+descdist(total.carb.nn, discrete = FALSE)
+
+```
+Total carb = beta distribution
+
+```{r}
+carb.energy.nn <- c(na.exclude(egg$carb.energy))
+descdist(carb.energy.nn, discrete = FALSE)
+```
+Carb energy = beta distribution
+
+All non-normal variables = beta distributions!
+
+
+### Beta regression models (diameter, volume, total carb, carb energy)
+
+```{r}
+install.packages("betareg")
+library(betareg)
+volume.beta <- betareg(volume ~ population*species, data = egg)
+summary(volume.beta)
+egg_stats <- 
+  egg_stats %>%
+  mutate(volume_pred = predict(volume.beta))
+
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+volume.mod <- lm(volume ~ population * species, egg)
+
+plot(volume.mod, which = 2, add.smooth = FALSE)
+plot(volume.mod, which = 3, add.smooth = FALSE)
+
+```
+```{r}
+library(MuMIn)
+total.protein.mod <- glm(total.protein ~ population * species, data = egg)
+summary(total.protein.mod)
+
+plot(total.protein.mod, which = 2, add.smooth = FALSE)
+plot(total.protein.mod, which = 3, add.smooth = FALSE)
+
+```
+
+
+```{r}
+anova(lm(volume ~ species * population, egg))
+
+```
+
+
+### Modeling
+
+library(MuMIn)
+
+Check if data normal (p-value >0.05 for shapiro test = normal):
+```{r}
+lshap <- lapply(egg[5:23], shapiro.test)
+lres <- sapply(lshap, `[`, c("statistic","p.value"))
+t(lres)
+```
+
+The following variables are not normally distributed and have to be treated accordingly:
+- Diameter
+- Volume
+- Total Carb
+- Carb Energy
+
+```{r}
+vol.dist <- ggplot(egg, aes(x = X, y = volume)) +
+  geom_line()
+
+diam.dist <- ggplot(egg, aes(x = X, y = diameter)) +
+  geom_line()
+
+totcarb.dist <- ggplot(egg, aes(x = X, y = total.carb)) +
+  geom_line()
+
+carbenergy.dist <- ggplot(egg, aes(x = X, y = carb.energy)) +
+  geom_line()
+
+
+vol.dist + diam.dist + totcarb.dist + carbenergy.dist
+```
+```{r}
+
+```
+
+
+GLMs
+```{r}
+total.protein.glm <- glm(total.protein ~ population * species, data = egg)
+anova(total.protein.glm, test = "Chisq")
+summary(total.protein.glm)
+egg_stats <- egg %>%
+  mutate(total.protein.glm = predict(total.protein.glm))
+
+
+```
+
+```{r}
+
+```
+

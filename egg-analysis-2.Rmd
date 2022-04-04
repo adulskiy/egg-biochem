@@ -1,0 +1,216 @@
+---
+title: "egg-analysis-2"
+author: "Ana Dulskiy"
+date: "4/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+Load libraries:
+
+```{r}
+library(tidyverse)
+library(patchwork)
+library(MuMIn)
+library(car)
+library(fitdistrplus)
+library(betareg)
+```
+
+Load data:
+```{r}
+getwd()
+egg <- read.csv("~/eggdata_clean.csv")
+```
+
+### 2-way ANOVA unbalanced
+
+Check if data normal (p-value >0.05 for shapiro test = normal):
+```{r}
+lshap <- lapply(egg[4:22], shapiro.test)
+lres <- sapply(lshap, `[`, c("statistic","p.value"))
+t(lres)
+
+```
+
+The following variables are not normally distributed according to the shapiro test and have to be treated accordingly:
+- Diameter
+- Volume
+- Total Carb
+- Carb Energy
+
+
+Figure out what distributions we're dealing with for non-normal data:
+```{r}
+descdist(egg$diameter, discrete = FALSE, boot = 100)
+```
+Diameter = beta distribution
+
+```{r}
+descdist(egg$volume, discrete = FALSE)
+
+```
+
+Volume = beta distribution
+
+```{r}
+#total.carb has one NA value, so we need to remove that to do the descdist plot
+total.carb.nn <- c(na.exclude(egg$total.carb))
+descdist(total.carb.nn, discrete = FALSE)
+
+```
+Total carb = beta distribution
+
+```{r}
+carb.energy.nn <- c(na.exclude(egg$carb.energy))
+descdist(carb.energy.nn, discrete = FALSE)
+```
+Carb energy = beta distribution
+
+All non-normal variables = beta distributions!
+
+
+### Beta regression models (diameter, volume, total carb, carb energy)
+
+```{r}
+diameter.beta <- betareg(diameter ~ population*species, data = egg)
+summary(diameter.beta)
+# doesn't work on diameter... maybe beta isn't the right call
+```
+
+```{r}
+volume.beta <- betareg(volume ~ population*species, data = egg)
+summary(volume.beta)
+egg_stats <- 
+  egg %>%
+  mutate(volumepred = predict(volume.beta))
+
+```
+
+
+### GLMs (Gaussian)
+
+Total Protein:
+```{r}
+total.protein.mod <- glm(total.protein ~ population*species, data = egg)
+summary(total.protein.mod)
+egg_stats <- egg_stats %>%
+  mutate(total.protein.pred = predict(total.protein.mod))
+```
+
+
+
+Protein Density:
+```{r}
+protein.density.mod <- glm(protein.density ~ population*species, data = egg)
+summary(protein.density.mod)
+egg_stats <- egg_stats %>%
+  mutate(protein.density.pred = predict(protein.density.mod))
+```
+
+Total Lipid:
+```{r}
+total.lipid.mod <- glm(total.lipid ~ population*species, data = egg)
+summary(total.lipid.mod)
+egg_stats <- egg_stats %>%
+  mutate(total.lipid.pred = predict(total.lipid.mod))
+```
+
+
+Lipid Density:
+```{r}
+lipid.density.mod <- glm(lipid.density ~ population*species, data = egg)
+summary(lipid.density.mod)
+egg_stats <- egg_stats %>%
+  mutate(lipid.density.pred = predict(lipid.density.mod))
+```
+
+Total Carb:
+```{r}
+total.carb.mod <- glm(total.carb ~ population*species, data = egg)
+summary(total.carb.mod)
+egg_stats <- egg_stats %>%
+  mutate(total.carb.pred = predict(total.carb.mod))
+```
+
+Carb Density:
+Protein Energy:
+Lipid Energy:
+Carb Energy:
+Total:Energy
+
+
+
+
+
+```{r}
+volume.mod <- lm(volume ~ population * species, egg)
+
+plot(volume.mod, which = 2, add.smooth = FALSE)
+plot(volume.mod, which = 3, add.smooth = FALSE)
+
+```
+
+
+```{r}
+
+total.protein.mod <- glm(total.protein ~ population * species, data = egg)
+summary(total.protein.mod)
+
+plot(total.protein.mod, which = 2, add.smooth = FALSE)
+plot(total.protein.mod, which = 3, add.smooth = FALSE)
+
+```
+
+
+
+
+
+
+
+
+### Modeling
+
+library(MuMIn)
+
+```{r}
+vol.dist <- ggplot(egg, aes(x = X, y = volume)) +
+  geom_line()
+
+diam.dist <- ggplot(egg, aes(x = X, y = diameter)) +
+  geom_line()
+
+totcarb.dist <- ggplot(egg, aes(x = X, y = total.carb)) +
+  geom_line()
+
+carbenergy.dist <- ggplot(egg, aes(x = X, y = carb.energy)) +
+  geom_line()
+
+
+vol.dist + diam.dist + totcarb.dist + carbenergy.dist
+```
+```{r}
+
+```
+
+
+GLMs
+```{r}
+total.protein.glm <- glm(total.protein ~ population * species, data = egg)
+anova(total.protein.glm, test = "Chisq")
+summary(total.protein.glm)
+egg_stats <- egg %>%
+  mutate(total.protein.glm = predict(total.protein.glm))
+
+
+```
+
+```{r}
+
+```
+
